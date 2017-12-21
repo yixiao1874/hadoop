@@ -19,6 +19,12 @@
       <groupId>org.apache.mahout</groupId>
       <artifactId>mahout-mr</artifactId>
       <version>0.13.0</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>hadoop-client</artifactId>
+          <groupId>org.apache.hadoop</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
 
