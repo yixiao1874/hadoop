@@ -19,6 +19,7 @@ public class UserVectorToCooccurrenceMapper extends
                 int index2 = it2.next().index();
                 context.write(new IntWritable(index1), new IntWritable(index2));
             }
+
         }
     }
 }
