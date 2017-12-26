@@ -26,6 +26,8 @@ public class Step2 {
         private final static Text k = new Text();
         private final static IntWritable v = new IntWritable(1);
 
+
+        //输入<userId,{itermId1+":"+pref,itermId2+":"+pref....}>  <IntWritable,Text>
         @Override
         public void map(LongWritable key, Text values, OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
             String[] tokens = Recommend.DELIMITER.split(values.toString());
@@ -34,6 +36,7 @@ public class Step2 {
                 for (int j = 1; j < tokens.length; j++) {
                     String itemID2 = tokens[j].split(":")[0];
                     k.set(itemID + ":" + itemID2);
+                    //输出<itermID:itermID2,1>   <Text,IntWritable>
                     output.collect(k, v);
                 }
             }
@@ -60,6 +63,7 @@ public class Step2 {
                 sum += iterator.next().get();
             }
             result.set(sum);
+            //输出<itermID:itermID2,sum>   <Text,IntWritable>
             outputCollector.collect(text, result);
         }
     }

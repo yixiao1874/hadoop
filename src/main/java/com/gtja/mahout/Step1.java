@@ -34,6 +34,7 @@ public class Step1 {
             String pref = tokens[2];
             k.set(userID);
             v.set(itemID + ":" + pref);
+            //输出了<userId,itermId+":"+pref>  <IntWritable,Text>
             output.collect(k, v);
         }
     }
@@ -50,7 +51,7 @@ public class Step1 {
             v.set(sb.toString().replaceFirst(",", ""));
             output.collect(key, v);
         }*/
-
+        //输入<userId,itermId+":"+pref>  <IntWritable,Text>
         @Override
         public void reduce(IntWritable intWritable, Iterator<Text> iterator, OutputCollector<IntWritable, Text> outputCollector, Reporter reporter) throws IOException {
             StringBuilder sb = new StringBuilder();
@@ -58,6 +59,8 @@ public class Step1 {
                 sb.append("," + iterator.next());
             }
             v.set(sb.toString().replaceFirst(",", ""));
+
+            //输出<userId,{itermId1+":"+pref,itermId2+":"+pref....}>  <IntWritable,Text>
             outputCollector.collect(intWritable, v);
         }
     }

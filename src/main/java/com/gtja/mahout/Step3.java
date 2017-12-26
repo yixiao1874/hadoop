@@ -25,6 +25,8 @@ public class Step3 {
         private final static IntWritable k = new IntWritable();
         private final static Text v = new Text();
 
+
+        //输入<userId,{itermId1+":"+pref,itermId2+":"+pref....}>  <IntWritable,Text>
         @Override
         public void map(LongWritable key, Text values, OutputCollector<IntWritable, Text> output, Reporter reporter) throws IOException {
             String[] tokens = Recommend.DELIMITER.split(values.toString());
@@ -35,6 +37,7 @@ public class Step3 {
 
                 k.set(itemID);
                 v.set(tokens[0] + ":" + pref);
+                //<itermID,itermId1+":"+pref+ ":" + pref>
                 output.collect(k, v);
             }
         }
@@ -66,6 +69,8 @@ public class Step3 {
         }
     }
 
+
+    //<itermID:itermID2,sum>   <Text,IntWritable>
     public static class Step32_CooccurrenceColumnWrapperMapper extends MapReduceBase implements Mapper<LongWritable, Text, Text, IntWritable> {
         private final static Text k = new Text();
         private final static IntWritable v = new IntWritable();

@@ -14,7 +14,7 @@ public class Test {
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         //执行远端文件
-        conf.set("fs.defaultFS", "hdfs://192.168.56.100:9000");
+        //conf.set("fs.defaultFS", "hdfs://192.168.56.100:9000");
         //conf.set("dfs.replication", "2");//默认为3
         /*//远端执行
         conf.set("mapreduce.job.jar", "target/hadoop.jar");
@@ -32,14 +32,13 @@ public class Test {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(LongWritable.class);
 
-        /*
         //执行本地文件
         FileInputFormat.setInputPaths(job, "F:/Hadoop/test/input/test.txt");
-        FileOutputFormat.setOutputPath(job, new Path("F:/Hadoop/test/output/"));*/
+        FileOutputFormat.setOutputPath(job, new Path("F:/Hadoop/test/output/"));
 
-        //执行远端文件
+        /*//执行远端文件
         FileInputFormat.setInputPaths(job, "/input/test.txt");
-        FileOutputFormat.setOutputPath(job, new Path("/output3/"));
+        FileOutputFormat.setOutputPath(job, new Path("/output3/"));*/
 
        /* //远端执行
         FileInputFormat.setInputPaths(job, "/wcinput/");
