@@ -1,10 +1,12 @@
 package com.gtja.spark;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.Function;
 import scala.Tuple2;
 
 import java.util.Arrays;
@@ -16,7 +18,7 @@ public class Test {
         SparkConf conf = new SparkConf().setMaster("local").setAppName("My App");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-        JavaRDD<String> input = sc.textFile(
+        /*JavaRDD<String> input = sc.textFile(
                 "file:///E:/test/test.dat");
         JavaRDD<String> words = input.flatMap(
           s -> Arrays.asList(s.split(",")).iterator()
@@ -31,6 +33,11 @@ public class Test {
         for (Tuple2<?,?> tuple : output) {
             System.out.println(tuple._1() + ": " + tuple._2());
         }
-        sc.stop();
+        sc.stop();*/
+
+        JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 2, 3, 3));
+        /*JavaRDD<Integer> result = rdd.map(new Function<Integer, Integer>() {
+            public Integer call(Integer x) { return x*x; }
+        });*/
     }
 }

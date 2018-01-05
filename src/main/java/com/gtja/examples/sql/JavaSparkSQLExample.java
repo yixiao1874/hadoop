@@ -125,7 +125,7 @@ public class JavaSparkSQLExample {
     // |-- name: string (nullable = true)
 
     // Select only the "name" column
-    df.select("name").show();
+   // df.select("name").show();
     // +-------+
     // |   name|
     // +-------+
