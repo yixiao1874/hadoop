@@ -1,8 +1,13 @@
 package com.gtja.recommendjava;
 
+import com.gtja.mahout.Recommend;
+import org.apache.spark.SparkContext;
+import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+import scala.Function1;
 import scala.Tuple2;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function;
@@ -11,30 +16,30 @@ import org.apache.spark.mllib.recommendation.MatrixFactorizationModel;
 import org.apache.spark.mllib.recommendation.Rating;
 import org.apache.spark.SparkConf;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.util.*;
 
 
 public class JavaRecommendationExample {
     public static void main(String args[]) {
-        SparkConf conf = new SparkConf().setAppName("Java Recommend");
+        String[] strings = {"out/artifacts/hadoop_jar/hadoop.jar"};
+        SparkConf conf = new SparkConf().setAppName("Java Recommend")
+                .setJars(strings);
         JavaSparkContext jsc = new JavaSparkContext(conf);
 
         SQLContext sqlContext = new SQLContext(jsc);
-        /*String url = "jdbc:mysql://localhost:3306/test";
+        String url = "jdbc:mysql://192.168.56.1:3306/test?useSSL=false&autoReconnect=true&failOverReadOnly=false";
         Properties connectionProperties = new Properties();
         connectionProperties.put("user","root");
         connectionProperties.put("password","1874");
-        connectionProperties.put("driver","com.mysql.jdbc.Driver");
-*/
-        String url = "jdbc:mysql://10.189.80.86:3306/zntg?useUnicode=true&characterEncoding=utf-8&useSSL=false";
-        Properties connectionProperties = new Properties();
-        connectionProperties.put("user","root");
-        connectionProperties.put("password","PasswOrd");
         connectionProperties.put("driver","com.mysql.jdbc.Driver");
 
 
         // Load and parse the data
         String path = args[0];
+        //RDD<String> rdd = sqlContext.sparkContext().textFile(path,100);
         JavaRDD<String> data = jsc.textFile(path);
         JavaRDD<Rating> ratings = data.map(
                 new Function<String, Rating>() {
@@ -46,20 +51,18 @@ public class JavaRecommendationExample {
                 }
         );
 
-        //取出输入的数据Rating(1,101,1.0)
-        //Rating(1,102,5.0)
-        //Rating(1,105,2.0)
-        //Rating(1,108,1.0)
-        /*List<Rating> lists =  ratings.collect();
-        for(Rating l:lists){
-            System.out.println(l);
-        }*/
-
+        RDD<Rating> rdd = JavaRDD.toRDD(ratings);
         // Build the recommendation model using ALS
         int rank = 10;
         int numIterations = 10;
 
         //使用具体评分数进行训练
+        /*train()参数详解
+         * RDD<ratings>:原始的评分矩阵
+         * rank:模型中隐语义因子个数
+         * iterations:迭代次数
+         * lambda:正则化参数，防止过度拟合
+         */
         MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(ratings), rank, numIterations, 0.01);
 
         //忽略评分数据进行模型训练
@@ -103,25 +106,21 @@ public class JavaRecommendationExample {
         ).rdd()).mean();
         System.out.println("Mean Squared Error = " + MSE);
 
-        // Save and load model
-        //删除临时目录
-        /*Configuration configuration = new Configuration();
-        conf.set("fs.defaultFS", "hdfs://192.168.56.100:9000");
-        try {
-            FileSystem fileSystem = FileSystem.get(configuration);
-            fileSystem.delete(new Path("target/tmp/myCollaborativeFilter"), true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
+        //给所有用户推荐
+        RDD<Tuple2<Object,Rating[]>> recommendRDD = model.recommendProductsForUsers(10);
 
 
-        /*model.save(jsc.sc(), "target/tmp/myCollaborativeFilter");
-        MatrixFactorizationModel sameModel = MatrixFactorizationModel.load(jsc.sc(),
-                "target/tmp/myCollaborativeFilter");*/
-
+        Tuple2<Object,Rating[]>[] tuple2 = (Tuple2<Object,Rating[]>[])recommendRDD.take(2);
+        for(Tuple2<Object,Rating[]> t :tuple2){
+            Rating[] rating = t._2;
+            for(Rating r:rating){
+                System.out.println("为用户"+r.user()+r.product()+r.product());
+            }
+        }
+        recommendRDD.saveAsTextFile("file:///E:/test/recommend.csv");
 
         //使用模型为用户推荐内容
-        Rating[] recommendations =model.recommendProducts(1, 3);
+        /*Rating[] recommendations =model.recommendProducts(1, 3);
         for(int i=0;i<recommendations.length;i++){
             System.out.println("推荐的产品为:"+recommendations[i].product());
             System.out.println("被推荐用户:"+recommendations[i].user());
@@ -131,10 +130,7 @@ public class JavaRecommendationExample {
             JavaRDD<String> personData =
                     jsc.parallelize(Arrays.asList(recommendations[i].user()+" "+recommendations[i].product()+" "+recommendations[i].rating()));
 
-
-            /**
-             * 第一步：在RDD的基础上创建类型为Row的RDD
-             */
+            //第一步：在RDD的基础上创建类型为Row的RDD
             //将RDD变成以Row为类型的RDD。Row可以简单理解为Table的一行数据
             JavaRDD<Row> personsRDD = personData.map(new Function<String,Row>(){
                 public Row call(String line) throws Exception {
@@ -143,28 +139,12 @@ public class JavaRecommendationExample {
                 }
             });
 
-            /**
-             * 第二步：动态构造DataFrame的元数据。
-             */
-            List structFields = new ArrayList();
-            structFields.add(DataTypes.createStructField("customer_no",DataTypes.IntegerType,true));
-            structFields.add(DataTypes.createStructField("stock_code",DataTypes.IntegerType,true));
-            structFields.add(DataTypes.createStructField("score",DataTypes.DoubleType,true));
+        }*/
 
-            //构建StructType，用于最后DataFrame元数据的描述
-            StructType structType = DataTypes.createStructType(structFields);
-
-            /**
-             * 第三步：基于已有的元数据以及RDD<Row>来构造DataFrame
-             */
-            Dataset personsDF = sqlContext.createDataFrame(personsRDD,structType);
-
-            /**
-             * 第四步：将数据写入到person表中
-             */
-            personsDF.write().mode("append").jdbc(url,"CUST_SCORE_STK",connectionProperties);
-        }
+        // Save and load model
+        //save()将模型存储在指定位置，存储的结果可以在下次读取时，直接执行上面的推荐函数，给出推荐结果。
+        model.save(jsc.sc(), "target/tmp/myCollaborativeFilter");
+        MatrixFactorizationModel sameModel = MatrixFactorizationModel.load(jsc.sc(), "target/tmp/myCollaborativeFilter");
 
     }
-
 }
