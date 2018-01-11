@@ -105,7 +105,7 @@ object MovieLensALS {
     val numValidation = validationSet.count()
     val numTest = testSet.count()
 
-    println("Training data: "+numTrain+" Validation data: "+numValidation+" Test data: "+numTest)
+    println("Training data: "+numTrain+" Validation data: "+numValidation+" RecommendMovie data: "+numTest)
 
     //3.5 Train model and optimize model with validation set
     val numRanks = List(8, 12)

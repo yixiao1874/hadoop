@@ -1,5 +1,6 @@
 package com.gtja.spark;
 
+import com.gtja.recommendjava.Person;
 import org.apache.commons.lang.StringUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -15,9 +16,31 @@ import java.util.List;
 
 public class Test {
     public static void main(String[] args) {
-        SparkConf conf = new SparkConf().setMaster("local").setAppName("My App");
+        SparkConf conf = new SparkConf().setAppName("My App");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
+        JavaRDD<String> input = sc.textFile(
+                "/test/rec1");
+
+        System.out.println(input.first());
+
+        /*JavaRDD<String> input = sc.textFile(
+                "file:///E:/test/test.dat");
+
+        JavaRDD<Person> personJavaRDD = input.map(new Function<String, Person>() {
+            @Override
+            public Person call(String v1) throws Exception {
+                String[] strings = v1.split(",");
+                Person person = new Person();
+                person.setUserID(Integer.parseInt(strings[0]));
+                person.setItemID(Integer.parseInt(strings[1]));
+                person.setPref(Double.parseDouble(strings[2]));
+                return person;
+            }
+        });
+
+        Person p = personJavaRDD.first();
+        System.out.println(p.getItemID()+" "+p.getPref());*/
         /*JavaRDD<String> input = sc.textFile(
                 "file:///E:/test/test.dat");
         JavaRDD<String> words = input.flatMap(
@@ -40,4 +63,6 @@ public class Test {
             public Integer call(Integer x) { return x*x; }
         });*/
     }
+
+
 }

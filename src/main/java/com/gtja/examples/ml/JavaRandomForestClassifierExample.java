@@ -90,7 +90,7 @@ public class JavaRandomForestClassifierExample {
       .setPredictionCol("prediction")
       .setMetricName("accuracy");
     double accuracy = evaluator.evaluate(predictions);
-    System.out.println("Test Error = " + (1.0 - accuracy));
+    System.out.println("RecommendMovie Error = " + (1.0 - accuracy));
 
     RandomForestClassificationModel rfModel = (RandomForestClassificationModel)(model.stages()[2]);
     System.out.println("Learned classification forest model:\n" + rfModel.toDebugString());

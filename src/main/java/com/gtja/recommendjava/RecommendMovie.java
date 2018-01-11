@@ -26,11 +26,11 @@ import scala.Tuple3;
  * Version: 1.0
  * <p>
  */
-public class Test {
+public class RecommendMovie {
 
     public static void main(String[] args) {
         // 创建入口对象
-        SparkConf conf = new SparkConf().setAppName("Test").setMaster("local");
+        SparkConf conf = new SparkConf().setAppName("RecommendMovie").setMaster("local");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         // 加载评分数据

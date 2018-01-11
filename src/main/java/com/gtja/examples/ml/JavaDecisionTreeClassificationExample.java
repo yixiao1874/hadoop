@@ -92,7 +92,7 @@ public class JavaDecisionTreeClassificationExample {
       .setPredictionCol("prediction")
       .setMetricName("accuracy");
     double accuracy = evaluator.evaluate(predictions);
-    System.out.println("Test Error = " + (1.0 - accuracy));
+    System.out.println("RecommendMovie Error = " + (1.0 - accuracy));
 
     DecisionTreeClassificationModel treeModel =
       (DecisionTreeClassificationModel) (model.stages()[2]);

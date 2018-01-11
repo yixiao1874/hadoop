@@ -67,7 +67,7 @@ class JavaDecisionTreeClassificationExample {
     double testErr =
       predictionAndLabel.filter(pl -> !pl._1().equals(pl._2())).count() / (double) testData.count();
 
-    System.out.println("Test Error: " + testErr);
+    System.out.println("RecommendMovie Error: " + testErr);
     System.out.println("Learned classification tree model:\n" + model.toDebugString());
 
     // Save and load model

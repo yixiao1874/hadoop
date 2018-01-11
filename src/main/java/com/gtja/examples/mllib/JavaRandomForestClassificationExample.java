@@ -66,7 +66,7 @@ public class JavaRandomForestClassificationExample {
       testData.mapToPair(p -> new Tuple2<>(model.predict(p.features()), p.label()));
     double testErr =
       predictionAndLabel.filter(pl -> !pl._1().equals(pl._2())).count() / (double) testData.count();
-    System.out.println("Test Error: " + testErr);
+    System.out.println("RecommendMovie Error: " + testErr);
     System.out.println("Learned classification forest model:\n" + model.toDebugString());
 
     // Save and load model

@@ -68,7 +68,7 @@ public class JavaMultilayerPerceptronClassifierExample {
     MulticlassClassificationEvaluator evaluator = new MulticlassClassificationEvaluator()
       .setMetricName("accuracy");
 
-    System.out.println("Test set accuracy = " + evaluator.evaluate(predictionAndLabels));
+    System.out.println("RecommendMovie set accuracy = " + evaluator.evaluate(predictionAndLabels));
     // $example off$
 
     spark.stop();

@@ -67,7 +67,7 @@ class JavaDecisionTreeRegressionExample {
       double diff = pl._1() - pl._2();
       return diff * diff;
     }).mean();
-    System.out.println("Test Mean Squared Error: " + testMSE);
+    System.out.println("RecommendMovie Mean Squared Error: " + testMSE);
     System.out.println("Learned regression tree model:\n" + model.toDebugString());
 
     // Save and load model

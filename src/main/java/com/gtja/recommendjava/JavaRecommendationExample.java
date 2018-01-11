@@ -8,6 +8,7 @@ import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import scala.Function1;
+import scala.Function2;
 import scala.Tuple2;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function;
@@ -15,6 +16,9 @@ import org.apache.spark.mllib.recommendation.ALS;
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel;
 import org.apache.spark.mllib.recommendation.Rating;
 import org.apache.spark.SparkConf;
+import scala.collection.Iterator;
+import scala.collection.TraversableOnce;
+import scala.runtime.BoxedUnit;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -29,12 +33,12 @@ public class JavaRecommendationExample {
                 .setJars(strings);
         JavaSparkContext jsc = new JavaSparkContext(conf);
 
-        SQLContext sqlContext = new SQLContext(jsc);
+        /*SQLContext sqlContext = new SQLContext(jsc);
         String url = "jdbc:mysql://192.168.56.1:3306/test?useSSL=false&autoReconnect=true&failOverReadOnly=false";
         Properties connectionProperties = new Properties();
         connectionProperties.put("user","root");
         connectionProperties.put("password","1874");
-        connectionProperties.put("driver","com.mysql.jdbc.Driver");
+        connectionProperties.put("driver","com.mysql.jdbc.Driver");*/
 
 
         // Load and parse the data
@@ -51,7 +55,6 @@ public class JavaRecommendationExample {
                 }
         );
 
-        RDD<Rating> rdd = JavaRDD.toRDD(ratings);
         // Build the recommendation model using ALS
         int rank = 10;
         int numIterations = 10;
@@ -107,17 +110,55 @@ public class JavaRecommendationExample {
         System.out.println("Mean Squared Error = " + MSE);
 
         //给所有用户推荐
-        RDD<Tuple2<Object,Rating[]>> recommendRDD = model.recommendProductsForUsers(10);
+        JavaRDD<Tuple2<Object,Rating[]>> recommendRDD = model.recommendProductsForUsers(10).toJavaRDD();
 
 
-        Tuple2<Object,Rating[]>[] tuple2 = (Tuple2<Object,Rating[]>[])recommendRDD.take(2);
+        recommendRDD.foreachPartition(new VoidFunction<java.util.Iterator<Tuple2<Object, Rating[]>>>() {
+            @Override
+            public void call(java.util.Iterator<Tuple2<Object, Rating[]>> tuple2Iterator) throws Exception {
+                Connection conn = null;
+                PreparedStatement ps = null;
+                Class.forName("com.mysql.jdbc.Driver");
+                conn = DriverManager.getConnection("jdbc:mysql://192.168.56.1:3306/test","root","1874");
+                ps = conn.prepareStatement("INSERT INTO recommend (userID,itemID,pref) VALUES (?,?,?)");
+                while(tuple2Iterator.hasNext()){
+                    Tuple2<Object, Rating[]> tuple2 = tuple2Iterator.next();
+                    Rating[] ratings1 = tuple2._2;
+                    for(Rating r:ratings1){
+                        ps.setInt(1,r.user());
+                        ps.setInt(2,r.product());
+                        ps.setDouble(3,r.rating());
+                        ps.execute();
+                    }
+                }
+                /*Class.forName("com.mysql.jdbc.Driver");
+                conn = DriverManager.getConnection(
+                        "jdbc:mysql://10.189.80.86:3306/zntg?characterEncoding=utf8&useSSL=false","root","Passw0rd");
+                ps = conn.prepareStatement("INSERT INTO RECOMMEND_RESULT (customer_no,stock_code,score) VALUES (?,?,?)");
+                while(tuple2Iterator.hasNext()){
+                    Tuple2<Object, Rating[]> tuple2 = tuple2Iterator.next();
+                    Rating[] ratings1 = tuple2._2;
+                    for(Rating r:ratings1){
+                        ps.setInt(1,r.user());
+                        ps.setInt(2,r.product());
+                        ps.setDouble(3,r.rating());
+                        ps.execute();
+                    }
+                }*/
+                ps.close();
+                conn.close();
+            }
+        });
+
+        /*List<Tuple2<Object, Rating[]>> tuple2 = recommendRDD.take(2);
         for(Tuple2<Object,Rating[]> t :tuple2){
             Rating[] rating = t._2;
             for(Rating r:rating){
-                System.out.println("为用户"+r.user()+r.product()+r.product());
+                System.out.println("为用户"+r.user()+"推荐"+r.product()+"预测用户喜爱度"+r.rating());
             }
         }
-        recommendRDD.saveAsTextFile("file:///E:/test/recommend.csv");
+        recommendRDD.saveAsTextFile("/test/rec1");
+        recommendRDD.saveAsObjectFile("/test/rec2");*/
 
         //使用模型为用户推荐内容
         /*Rating[] recommendations =model.recommendProducts(1, 3);
@@ -143,8 +184,8 @@ public class JavaRecommendationExample {
 
         // Save and load model
         //save()将模型存储在指定位置，存储的结果可以在下次读取时，直接执行上面的推荐函数，给出推荐结果。
-        model.save(jsc.sc(), "target/tmp/myCollaborativeFilter");
-        MatrixFactorizationModel sameModel = MatrixFactorizationModel.load(jsc.sc(), "target/tmp/myCollaborativeFilter");
+        /*model.save(jsc.sc(), "target/tmp/myCollaborativeFilter");
+        MatrixFactorizationModel sameModel = MatrixFactorizationModel.load(jsc.sc(), "target/tmp/myCollaborativeFilter");*/
 
     }
 }
