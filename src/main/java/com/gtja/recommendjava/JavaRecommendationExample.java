@@ -1,14 +1,5 @@
 package com.gtja.recommendjava;
 
-import com.gtja.mahout.Recommend;
-import org.apache.spark.SparkContext;
-import org.apache.spark.api.java.function.VoidFunction;
-import org.apache.spark.rdd.RDD;
-import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
-import scala.Function1;
-import scala.Function2;
 import scala.Tuple2;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function;
@@ -16,21 +7,13 @@ import org.apache.spark.mllib.recommendation.ALS;
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel;
 import org.apache.spark.mllib.recommendation.Rating;
 import org.apache.spark.SparkConf;
-import scala.collection.Iterator;
-import scala.collection.TraversableOnce;
-import scala.runtime.BoxedUnit;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.util.*;
 
 
 public class JavaRecommendationExample {
     public static void main(String args[]) {
         String[] strings = {"out/artifacts/hadoop_jar/hadoop.jar"};
         SparkConf conf = new SparkConf().setAppName("Java Recommend")
-                .setJars(strings);
+               .setJars(strings);
         JavaSparkContext jsc = new JavaSparkContext(conf);
 
         /*SQLContext sqlContext = new SQLContext(jsc);
@@ -49,8 +32,7 @@ public class JavaRecommendationExample {
                 new Function<String, Rating>() {
                     public Rating call(String s) {
                         String[] sarray = s.split(",");
-                        return new Rating(Integer.parseInt(sarray[0]), Integer.parseInt(sarray[1]),
-                                Double.parseDouble(sarray[2]));
+                        return null;
                     }
                 }
         );
@@ -65,6 +47,15 @@ public class JavaRecommendationExample {
          * rank:模型中隐语义因子个数
          * iterations:迭代次数
          * lambda:正则化参数，防止过度拟合
+         *  rank  = 10
+            模型的潜在因素的个数，即“用户 - 特征”和“产品 - 特征”矩阵的列数；一般来说，
+            它也是矩阵的阶。
+            iterations  = 5
+            矩阵分解迭代的次数；迭代的次数越多，花费的时间越长，但分解的结果可能会更好。
+            lambda  = 0.01
+            标准的过拟合参数；值越大越不容易产生过拟合，但值太大会降低分解的准确度。
+            alpha  = 1.0
+            控制矩阵分解时，被观察到的“用户 - 产品”交互相对没被观察到的交互的权重。
          */
         MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(ratings), rank, numIterations, 0.01);
 
@@ -110,10 +101,15 @@ public class JavaRecommendationExample {
         System.out.println("Mean Squared Error = " + MSE);
 
         //给所有用户推荐
-        JavaRDD<Tuple2<Object,Rating[]>> recommendRDD = model.recommendProductsForUsers(10).toJavaRDD();
+        //JavaRDD<Tuple2<Object,Rating[]>> recommendRDD = model.recommendProductsForUsers(10).toJavaRDD();
 
+        Rating[] ratings1 = model.recommendProducts(1,10);
+        for(Rating r:ratings1){
+            //System.out.println("为用户" + r.user() +"推荐商品" +r.product() +"喜爱度：" + r.rating());
+        }
 
-        recommendRDD.foreachPartition(new VoidFunction<java.util.Iterator<Tuple2<Object, Rating[]>>>() {
+        System.out.println("hello");
+        /*recommendRDD.foreachPartition(new VoidFunction<java.util.Iterator<Tuple2<Object, Rating[]>>>() {
             @Override
             public void call(java.util.Iterator<Tuple2<Object, Rating[]>> tuple2Iterator) throws Exception {
                 Connection conn = null;
@@ -131,7 +127,7 @@ public class JavaRecommendationExample {
                         ps.execute();
                     }
                 }
-                /*Class.forName("com.mysql.jdbc.Driver");
+                *//*Class.forName("com.mysql.jdbc.Driver");
                 conn = DriverManager.getConnection(
                         "jdbc:mysql://10.189.80.86:3306/zntg?characterEncoding=utf8&useSSL=false","root","Passw0rd");
                 ps = conn.prepareStatement("INSERT INTO RECOMMEND_RESULT (customer_no,stock_code,score) VALUES (?,?,?)");
@@ -144,11 +140,11 @@ public class JavaRecommendationExample {
                         ps.setDouble(3,r.rating());
                         ps.execute();
                     }
-                }*/
+                }*//*
                 ps.close();
                 conn.close();
             }
-        });
+        });*/
 
         /*List<Tuple2<Object, Rating[]>> tuple2 = recommendRDD.take(2);
         for(Tuple2<Object,Rating[]> t :tuple2){
@@ -186,6 +182,5 @@ public class JavaRecommendationExample {
         //save()将模型存储在指定位置，存储的结果可以在下次读取时，直接执行上面的推荐函数，给出推荐结果。
         /*model.save(jsc.sc(), "target/tmp/myCollaborativeFilter");
         MatrixFactorizationModel sameModel = MatrixFactorizationModel.load(jsc.sc(), "target/tmp/myCollaborativeFilter");*/
-
     }
 }

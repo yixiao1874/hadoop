@@ -34,8 +34,8 @@ import java.math.BigDecimal;
  */
 public class CustAndStkInfo implements Serializable {
 
-	private String customer_no;
-	private String stock_code;
+	private int customer_id;
+	private int stock_id;
 	private BigDecimal hold_asset_avg;
 	private int hold_days;
 	private int match_cnt;
@@ -43,30 +43,31 @@ public class CustAndStkInfo implements Serializable {
 	private BigDecimal hold_asset;
 	private int total_match_cnt;
 	private int total_hold_days;
-	
+
+
 	/**
-	 * @return the customer_no
+	 * @return the customer_id
 	 */
-	public String getCustomer_no() {
-		return customer_no;
+	public int getCustomer_id() {
+		return customer_id;
 	}
 	/**
-	 * @param customer_no the customer_no to set
+	 * @param customer_id the customer_id to set
 	 */
-	public void setCustomer_no(String customer_no) {
-		this.customer_no = customer_no;
+	public void setCustomer_id(int customer_id) {
+		this.customer_id = customer_id;
 	}
 	/**
-	 * @return the stock_code
+	 * @return the stock_id
 	 */
-	public String getStock_code() {
-		return stock_code;
+	public int getStock_id() {
+		return stock_id;
 	}
 	/**
-	 * @param stock_code the stock_code to set
+	 * @param stock_id the stock_id to set
 	 */
-	public void setStock_code(String stock_code) {
-		this.stock_code = stock_code;
+	public void setStock_id(int stock_id) {
+		this.stock_id = stock_id;
 	}
 	/**
 	 * @return the hold_asset_avg
@@ -158,7 +159,7 @@ public class CustAndStkInfo implements Serializable {
 	public void setTotal_hold_days(int total_hold_days) {
 		this.total_hold_days = total_hold_days;
 	}
-	
+
 	/**
 	 * @param customer_no
 	 * @param stock_code
@@ -170,11 +171,11 @@ public class CustAndStkInfo implements Serializable {
 	 * @param total_match_cnt
 	 * @param total_hold_days
 	 */
-	public CustAndStkInfo(String customer_no, String stock_code, BigDecimal hold_asset_avg, int hold_days,
-                          int match_cnt, int in_match_lastdate, BigDecimal hold_asset, int total_match_cnt, int total_hold_days) {
+	public CustAndStkInfo(int customer_id, int stock_id, BigDecimal hold_asset_avg, int hold_days,
+						  int match_cnt, int in_match_lastdate, BigDecimal hold_asset, int total_match_cnt, int total_hold_days) {
 		super();
-		this.customer_no = customer_no;
-		this.stock_code = stock_code;
+		this.customer_id = customer_id;
+		this.stock_id = stock_id;
 		this.hold_asset_avg = hold_asset_avg;
 		this.hold_days = hold_days;
 		this.match_cnt = match_cnt;
@@ -183,11 +184,5 @@ public class CustAndStkInfo implements Serializable {
 		this.total_match_cnt = total_match_cnt;
 		this.total_hold_days = total_hold_days;
 	}
-	/**
-	 * 
-	 */
-	public CustAndStkInfo() {
-	}
-	
-	
 }
+
