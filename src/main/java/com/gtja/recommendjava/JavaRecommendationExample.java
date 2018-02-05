@@ -1,5 +1,8 @@
 package com.gtja.recommendjava;
 
+import org.apache.spark.mllib.evaluation.binary.BinaryConfusionMatrix;
+import org.apache.spark.rdd.RDD;
+import scala.Function1;
 import scala.Tuple2;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.Function;
@@ -12,9 +15,29 @@ import org.apache.spark.SparkConf;
 public class JavaRecommendationExample {
     public static void main(String args[]) {
         String[] strings = {"out/artifacts/hadoop_jar/hadoop.jar"};
-        SparkConf conf = new SparkConf().setAppName("Java Recommend")
-               .setJars(strings);
+        SparkConf conf = new SparkConf().setAppName("Java Recommend");
+               //.setJars(strings);
         JavaSparkContext jsc = new JavaSparkContext(conf);
+
+        /*JavaRDD<String> text = jsc.textFile("/test/text");
+        JavaRDD<Rating> object = jsc.objectFile("/test/object");
+
+
+        System.out.println(text.first());
+        System.out.println(object.first().user());
+
+
+        JavaRDD<Rating> ratings = text.map(
+                new Function<String, Rating>() {
+                    public Rating call(String s) {
+                        String[] sarray = s.split(",");
+                        return new Rating(Integer.parseInt(sarray[0].substring(7)), Integer.parseInt(sarray[1]),
+                        Double.parseDouble(sarray[2].substring(0,sarray[2].length()-1)));
+                    }
+                }
+        );
+
+        System.out.println(ratings.first().user());*/
 
         /*SQLContext sqlContext = new SQLContext(jsc);
         String url = "jdbc:mysql://192.168.56.1:3306/test?useSSL=false&autoReconnect=true&failOverReadOnly=false";
@@ -26,20 +49,25 @@ public class JavaRecommendationExample {
 
         // Load and parse the data
         String path = args[0];
-        //RDD<String> rdd = sqlContext.sparkContext().textFile(path,100);
+
         JavaRDD<String> data = jsc.textFile(path);
         JavaRDD<Rating> ratings = data.map(
                 new Function<String, Rating>() {
                     public Rating call(String s) {
                         String[] sarray = s.split(",");
-                        return null;
+                        /*return new Rating(Integer.parseInt(sarray[0].substring(7)), Integer.parseInt(sarray[1]),
+                                Double.parseDouble(sarray[2].substring(0,sarray[2].length()-1)));*/
+                        return new Rating(Integer.parseInt(sarray[0]), Integer.parseInt(sarray[1]),
+                                Double.parseDouble(sarray[2]));
                     }
                 }
         );
 
+
         // Build the recommendation model using ALS
-        int rank = 10;
-        int numIterations = 10;
+        int rank = Integer.parseInt(args[1]);
+        int numIterations = Integer.parseInt(args[2]);
+        double lambda = Double.parseDouble(args[3]);
 
         //使用具体评分数进行训练
         /*train()参数详解
@@ -57,10 +85,12 @@ public class JavaRecommendationExample {
             alpha  = 1.0
             控制矩阵分解时，被观察到的“用户 - 产品”交互相对没被观察到的交互的权重。
          */
-        MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(ratings), rank, numIterations, 0.01);
+        //MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(ratings), rank, numIterations, 0.01);
 
         //忽略评分数据进行模型训练
-        //MatrixFactorizationModel model = ALS.trainImplicit(JavaRDD.toRDD(ratings), rank, numIterations, 0.01, 0.01);
+        MatrixFactorizationModel model = ALS.trainImplicit(JavaRDD.toRDD(ratings), rank, numIterations, lambda, 0.01);
+
+
         // Evaluate the model on rating data
         JavaRDD<Tuple2<Object, Object>> userProducts = ratings.map(
                 new Function<Rating, Tuple2<Object, Object>>() {
@@ -101,14 +131,14 @@ public class JavaRecommendationExample {
         System.out.println("Mean Squared Error = " + MSE);
 
         //给所有用户推荐
-        //JavaRDD<Tuple2<Object,Rating[]>> recommendRDD = model.recommendProductsForUsers(10).toJavaRDD();
+        JavaRDD<Tuple2<Object,Rating[]>> recommendRDD = model.recommendProductsForUsers(10).toJavaRDD();
 
-        Rating[] ratings1 = model.recommendProducts(1,10);
+        /*Rating[] ratings1 = model.recommendProducts(1,10);
         for(Rating r:ratings1){
-            //System.out.println("为用户" + r.user() +"推荐商品" +r.product() +"喜爱度：" + r.rating());
-        }
+            System.out.println("为用户" + r.user() +"推荐商品" +r.product() +"喜爱度：" + r.rating());
+        }*/
 
-        System.out.println("hello");
+
         /*recommendRDD.foreachPartition(new VoidFunction<java.util.Iterator<Tuple2<Object, Rating[]>>>() {
             @Override
             public void call(java.util.Iterator<Tuple2<Object, Rating[]>> tuple2Iterator) throws Exception {

@@ -105,9 +105,9 @@ public class RecommendStock {
                 }
         );
 
-        // Build the recommendation model using ALS
-        int rank = 10;
-        int numIterations = 10;
+        int rank = Integer.parseInt(args[1]);
+        int numIterations = Integer.parseInt(args[2]);
+        double lambda = Double.parseDouble(args[3]);
 
         //使用具体评分数进行训练
         /*train()参数详解
@@ -123,39 +123,50 @@ public class RecommendStock {
             lambda  = 0.01
             标准的过拟合参数；值越大越不容易产生过拟合，但值太大会降低分解的准确度。
             alpha  = 1.0
-            控制矩阵分解时，被观察到的“用户 - 产品”交互相对没被观察到的交互的权重。*/
+            控制矩阵分解时，被观察到的“用户 - 产品”交互相对没被观察到的交互的权重。
+         */
+        MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(ratings), rank, numIterations, lambda);
 
-        MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(ratings), rank, numIterations, 0.01);
-
-        //给所有用户推荐
-        JavaRDD<Tuple2<Object,Rating[]>> recommendRDD = model.recommendProductsForUsers(5).toJavaRDD();
-        System.out.println(recommendRDD);
-        /*recommendRDD.foreachPartition(new VoidFunction<Iterator<Tuple2<Object, Rating[]>>>() {
-            @Override
-            public void call(java.util.Iterator<Tuple2<Object, Rating[]>> tuple2Iterator) throws Exception {
-                Connection conn = null;
-                PreparedStatement ps = null;
-                Class.forName("com.mysql.jdbc.Driver");
-                conn = DriverManager.getConnection(
-                        "jdbc:mysql://10.189.80.86:3306/zntg?characterEncoding=utf8&useSSL=false","root","Passw0rd");
-                ps = conn.prepareStatement("INSERT INTO RECOMMEND_RESULT (customer_no,stock_code,score) VALUES (?,?,?)");
-                conn.setAutoCommit(false);
-                while(tuple2Iterator.hasNext()){
-                    Tuple2<Object, Rating[]> tuple2 = tuple2Iterator.next();
-                    Rating[] ratings1 = tuple2._2;
-                    for(Rating r:ratings1){
-                        ps.setInt(1,r.user());
-                        ps.setInt(2,r.product());
-                        ps.setDouble(3,r.rating());
-                        ps.addBatch();
+        //忽略评分数据进行模型训练
+        //MatrixFactorizationModel model = ALS.trainImplicit(JavaRDD.toRDD(ratings), rank, numIterations, 0.01, 0.01);
+        // Evaluate the model on rating data
+        JavaRDD<Tuple2<Object, Object>> userProducts = ratings.map(
+                new Function<Rating, Tuple2<Object, Object>>() {
+                    public Tuple2<Object, Object> call(Rating r) {
+                        return new Tuple2<Object, Object>(r.user(), r.product());
                     }
-                    ps.executeBatch();
-                    conn.commit();
                 }
-                ps.close();
-                conn.close();
-            }
-        });*/
+        );
+
+        JavaPairRDD<Tuple2<Integer, Integer>, Double> predictions = JavaPairRDD.fromJavaRDD(
+                model.predict(JavaRDD.toRDD(userProducts)).toJavaRDD().map(
+                        new Function<Rating, Tuple2<Tuple2<Integer, Integer>, Double>>() {
+                            public Tuple2<Tuple2<Integer, Integer>, Double> call(Rating r){
+                                return new Tuple2<Tuple2<Integer, Integer>, Double>(
+                                        new Tuple2<Integer, Integer>(r.user(), r.product()), r.rating());
+                            }
+                        }
+                ));
+
+        JavaRDD<Tuple2<Double, Double>> ratesAndPreds =
+                JavaPairRDD.fromJavaRDD(ratings.map(
+                        new Function<Rating, Tuple2<Tuple2<Integer, Integer>, Double>>() {
+                            public Tuple2<Tuple2<Integer, Integer>, Double> call(Rating r){
+                                return new Tuple2<Tuple2<Integer, Integer>, Double>(
+                                        new Tuple2<Integer, Integer>(r.user(), r.product()), r.rating());
+                            }
+                        }
+                )).join(predictions).values();
+
+        double MSE = JavaDoubleRDD.fromRDD(ratesAndPreds.map(
+                new Function<Tuple2<Double, Double>, Object>() {
+                    public Object call(Tuple2<Double, Double> pair) {
+                        Double err = pair._1() - pair._2();
+                        return err * err;
+                    }
+                }
+        ).rdd()).mean();
+        System.out.println("Mean Squared Error = " + MSE);
 
     }
 }
