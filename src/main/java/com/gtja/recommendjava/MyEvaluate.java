@@ -113,20 +113,25 @@ public class MyEvaluate {
         //<用户打分商品列表，推荐商品列表>
         JavaRDD<Tuple2<List<Integer>, List<Integer>>> relevantDocs = userMoviesList.join(
                 userRecommendedList).values();
+        Tuple2<List<Integer>, List<Integer>> listTuple2 = relevantDocs.first();
+        for(Integer integer:listTuple2._1){
+            System.out.print(integer+",");
+        }
+        System.out.println("========================");
+        for(Integer integer:listTuple2._2){
+            System.out.print(integer+",");
+        }
 
 // Instantiate the metrics object
         RankingMetrics<Integer> metrics = RankingMetrics.of(relevantDocs);
 
 
 // Precision and NDCG at k
-        Integer[] kVector = {1, 3, 5};
-        for (Integer k : kVector) {
-            System.out.format("Precision at %d = %f\n", k, metrics.precisionAt(k));
-            System.out.format("NDCG at %d = %f\n", k, metrics.ndcgAt(k));
-        }
+            System.out.println(metrics.precisionAt(1));
+            System.out.println(metrics.ndcgAt(1));
 
 // Mean average precision
-        System.out.format("Mean average precision = %f\n", metrics.meanAveragePrecision());
+        System.out.print(metrics.meanAveragePrecision());
 
 // Evaluate the model using numerical ratings and regression metrics
         JavaRDD<Tuple2<Object, Object>> userProducts =

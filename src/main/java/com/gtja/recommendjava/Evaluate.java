@@ -46,7 +46,7 @@ public class Evaluate {
         MatrixFactorizationModel model = ALS.train(JavaRDD.toRDD(ratings), rank, numIterations, lambda);
 
 // Get top 10 recommendations for every user and scale ratings from 0 to 1
-        JavaRDD<Tuple2<Object, Rating[]>> userRecs = model.recommendProductsForUsers(10).toJavaRDD();
+        JavaRDD<Tuple2<Object, Rating[]>> userRecs = model.recommendProductsForUsers(1).toJavaRDD();
 
 
         JavaRDD<Tuple2<Object, Rating[]>> userRecsScaled = userRecs.map(t -> {
@@ -98,22 +98,23 @@ public class Evaluate {
         JavaRDD<Tuple2<List<Integer>, List<Integer>>> relevantDocs = userMoviesList.join(
                 userRecommendedList).values();
 
-
-        Tuple2<List<Integer>, List<Integer>> listTuple2 = relevantDocs.first();
-        for(Integer integer:listTuple2._1){
-            System.out.print(integer+",");
-        }
-        System.out.println("========================");
-        for(Integer integer:listTuple2._2){
-            System.out.print(integer+",");
+        List<Tuple2<List<Integer>, List<Integer>>> list = relevantDocs.collect();
+        for(Tuple2<List<Integer>, List<Integer>> tuple2:list){
+            for(Integer integer:tuple2._1){
+                System.out.print("打分"+integer+",");
+            }
+            System.out.println("========================");
+            for(Integer integer:tuple2._2){
+                System.out.println("预测" + integer+",");
+            }
         }
 
 // Instantiate the metrics object
         RankingMetrics<Integer> metrics = RankingMetrics.of(relevantDocs);
 
 // Precision and NDCG at k
-        System.out.println(metrics.precisionAt(5));
-        System.out.println(metrics.ndcgAt(5));
+        System.out.println(metrics.precisionAt(1));
+        System.out.println(metrics.ndcgAt(1));
 
 // Mean average precision
         System.out.print("Mean average precision = " + metrics.meanAveragePrecision());

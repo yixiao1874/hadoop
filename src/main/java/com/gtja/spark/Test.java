@@ -20,13 +20,13 @@ import java.util.List;
 
 public class Test {
     public static void main(String[] args) {
-        String s = "Rating(10214554,454616,54646646)";
+        String s = "Rating(10214554,454616,1.5622E-5)";
         String[] strings = s.split(",");
-        System.out.println(strings[0].substring(7));
-        System.out.println(strings[2].substring(0,strings[2].length()-1));
+        /*System.out.println(strings[0].substring(7));
+        System.out.println(strings[2].substring(0,strings[2].length()-1));*/
         Rating rating = new Rating(Integer.parseInt(strings[0].substring(7)), Integer.parseInt(strings[1]),
                 Double.parseDouble(strings[2].substring(0,strings[2].length()-1)));
-        System.out.println(rating.user());
+        System.out.println(rating.rating());
     }
 
 }
