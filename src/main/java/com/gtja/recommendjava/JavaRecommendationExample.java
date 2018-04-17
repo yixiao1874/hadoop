@@ -159,7 +159,7 @@ public class JavaRecommendationExample {
                 }
                 *//*Class.forName("com.mysql.jdbc.Driver");
                 conn = DriverManager.getConnection(
-                        "jdbc:mysql://10.189.80.86:3306/zntg?characterEncoding=utf8&useSSL=false","root","Passw0rd");
+                        "jdbc:mysql://10.189.80.86:3306/zntg?characterEncoding=utf8&useSSL=false","root","******");
                 ps = conn.prepareStatement("INSERT INTO RECOMMEND_RESULT (customer_no,stock_code,score) VALUES (?,?,?)");
                 while(tuple2Iterator.hasNext()){
                     Tuple2<Object, Rating[]> tuple2 = tuple2Iterator.next();
